@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Used car price estimator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+{% macro select_field(name, label) %}
+  <div class="field">
+    <label for="{{ name }}">{{ label }}</label>
+    <select id="{{ name }}" name="{{ name }}">
+      {% for option in choices[name] %}
+        <option value="{{ option }}" {% if values[name] == option %}selected{% endif %}>{{ option }}</option>
+      {% endfor %}
+    </select>
+    {% if errors[name] %}<p class="error">{{ errors[name] }}</p>{% endif %}
+  </div>
+{% endmacro %}
+
+{% macro number_field(name, label, min, max, step="1") %}
+  <div class="field">
+    <label for="{{ name }}">{{ label }}</label>
+    <input id="{{ name }}" name="{{ name }}" type="number" inputmode="decimal"
+           min="{{ min }}" max="{{ max }}" step="{{ step }}" value="{{ values[name] }}" required>
+    {% if errors[name] %}<p class="error">{{ errors[name] }}</p>{% endif %}
+  </div>
+{% endmacro %}
+
+<header class="masthead">
+  <h1>Used car price estimator</h1>
+  <p>Enter the details of a used car to get an estimated selling price.</p>
+</header>
+
+<main class="layout">
+  <form method="post" action="{{ url_for('index') }}" class="form">
+    <fieldset>
+      <legend>The car</legend>
+      <div class="grid">
+        {{ select_field('name', 'Brand') }}
+        {{ number_field('year', 'Year of manufacture', 1994, current_year) }}
+        {{ select_field('fuel', 'Fuel type') }}
+        {{ select_field('transmission', 'Transmission') }}
+        {{ number_field('seats', 'Seats', 2, 14) }}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Performance</legend>
+      <div class="grid">
+        {{ number_field('mileage', 'Mileage (kmpl)', 1, 50, '0.1') }}
+        {{ number_field('engine', 'Engine (cc)', 500, 6000) }}
+        {{ number_field('max_power', 'Max power (bhp)', 20, 700, '0.1') }}
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Usage and seller</legend>
+      <div class="grid">
+        {{ number_field('km_driven', 'Kilometres driven', 0, 1000000) }}
+        {{ select_field('owner', 'Ownership') }}
+        {{ select_field('seller_type', 'Seller type') }}
+      </div>
+    </fieldset>
+
+    <button type="submit">Get estimate</button>
+  </form>
+
+  <aside class="result" aria-live="polite">
+    {% if price %}
+      <div class="tag">
+        <p class="tag-label">Estimated price</p>
+        <p class="tag-price"><span class="rupee">&#8377;</span>{{ price }}</p>
+      </div>
+      <dl class="summary">
+        <dt>Car</dt><dd>{{ summary.name }}, {{ summary.year }}</dd>
+        <dt>Driven</dt><dd>{{ '{:,}'.format(summary.km_driven) }} km</dd>
+        <dt>Fuel</dt><dd>{{ summary.fuel }}, {{ summary.transmission }}</dd>
+        <dt>Ownership</dt><dd>{{ summary.owner }}</dd>
+      </dl>
+      <p class="note">This is a model estimate, not a valuation. Real prices depend on condition and location.</p>
+    {% else %}
+      <div class="tag empty">
+        <p class="tag-label">Estimated price</p>
+        <p class="tag-empty">Fill in the car details and choose Get estimate.</p>
+      </div>
+    {% endif %}
+  </aside>
+</main>
+
+</body>
+</html>
